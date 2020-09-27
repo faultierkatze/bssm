@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Bash Simple Server Monitor
+# Version: 2020-09-28
+# Intended to be used with a cronjob. For more details see README.md.
+
+export LC_MESSAGES=C
+
+# Importing the config file
+source bssm_config
+  if [[ $? != 0 ]]; then
+    echo "config file not found - aborting"
+    exit 1
+  fi
+
+# Test whether we can actually write to the given directory
+if [[ -w $OUTPUT_DIR ]]; then :
+  else echo "Output directory is not existent or not writeable by current user - aborting"
+       exit 1
+fi
+
+# Initialize file, aka delete the old one
+rm $OUTPUT_DIR/$OUTPUT_FILENAME
+
+
+### Begin of the actual output modules ###
+
+# Header
+if [[ $MOD_HEADER = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR$FIELD_SEPARATOR Statistics for $(hostname) $FIELD_SEPARATOR$FIELD_SEPARATOR\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# General system information
+#   This uses neofetch, which itself is a bash script, so if one wanted the relevant parts could be copied in here
+#   The way the load is displayed is kinda hacky
+if [[ $MOD_SYSINFO = 1 ]]; then
+  echo -e "$(neofetch cpu kernel distro --cpu_temp C)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "$(uptime -p)\nup since: $(uptime -s)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "$(uptime | cut -d " " -f 12-)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "users logged in: $(who -q | head -1)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# File systems
+if [[ $MOD_FILESYSTEMS = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR Filesystems $FIELD_SEPARATOR\n$(df -h -T -x devtmpfs -x tmpfs --total)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# RAM
+if [[ $MOD_RAM = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR     RAM     $FIELD_SEPARATOR\n$(free -h --total)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# Tasks
+if [[ $MOD_TASKS = 1 ]]; then
+  if [[ "$MOD_TASKS_COUNT" =~ "^[0-9]+$" ]]; then
+    echo "MOD_TASKS_COUNT not an integer, defaulting to 10."
+    MOD_TASKS_COUNT=10
+  fi
+  echo "$FIELD_SEPARATOR    Tasks    $FIELD_SEPARATOR" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  top -b -n 1 | cut -d $'\n' -f 2 >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  top -b -n 1 -o %CPU | cut -d $'\n' -f 7- | head -$(($MOD_TASKS_COUNT+1)) >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# Network
+if [[ $MOD_NETWORK = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR   Network   $FIELD_SEPARATOR\n$(ip -h -s a show $MOD_NETWORK_DEVICE)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+    if [[ $? = 1 ]]; then
+      echo "Set the correct network device in bssm_config." >> $OUTPUT_DIR/$OUTPUT_FILENAME
+    fi
+  echo >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+# Footer
+if [[ $MOD_FOOTER = 1 ]]; then
+  echo -e "\nfile written: $(date)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
+### End of output modules ###
+
+
+# Archiving of older stats by making a timestamped copy of the current one that will not be erased the next time this script is run
+if [[ $ARCHIVE = 1 ]]; then
+  ARCHIVE_FILENAME="${OUTPUT_FILENAME}_$(date +%Y%m%d_%H%M%S)"
+  cp $OUTPUT_DIR/$OUTPUT_FILENAME $OUTPUT_DIR/$ARCHIVE_FILENAME
+fi

@@ -1,0 +1,24 @@
+#!/bin/bash
+# config file for BSSM
+# enable options with 1, disable them with 0 (or basically anything else)
+
+# Output directory and file name. Make sure the directory is actually existent and writeable by the user you run this as.
+OUTPUT_DIR=.
+OUTPUT_FILENAME=bssm_output
+
+# Turn on archiving of older stats.
+ARCHIVE=0
+
+# This string is used to optically separate the different segments.
+FIELD_SEPARATOR="=========="
+
+# Individual modules can be switched off and on here
+MOD_HEADER=1
+MOD_SYSINFO=1
+MOD_FILESYSTEMS=1
+MOD_RAM=1
+MOD_TASKS=1
+MOD_TASKS_COUNT=10 # Number of top tasks to display. Has to be an integer obviously.
+MOD_NETWORK=1
+MOD_NETWORK_DEVICE= # Set this to the network device for which you want statistics, or leave empty to show all.
+MOD_FOOTER=1
