@@ -1,9 +1,13 @@
 #!/bin/bash
 #
 # Bash Simple Server Monitor
-# Version: 2020-09-28
+# Version: 2020-09-29
 # Intended to be used with a cronjob. For more details see README.md.
 
+# Set the timer
+TIMER1=$(($(date +%s%N)/1000000))
+
+# Make sure all the messages are displayed in English for consistency
 export LC_MESSAGES=C
 
 # Importing the config file
@@ -19,8 +23,10 @@ if [[ -w $OUTPUT_DIR ]]; then :
        exit 1
 fi
 
-# Initialize file, aka delete the old one
-rm $OUTPUT_DIR/$OUTPUT_FILENAME
+# Initialize file, aka delete the old one - if it exists
+if [[ -e $OUTPUT_DIR/$OUTPUT_FILENAME ]]; then
+  rm $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
 
 
 ### Begin of the actual output modules ###
@@ -74,6 +80,9 @@ fi
 # Footer
 if [[ $MOD_FOOTER = 1 ]]; then
   echo -e "\nfile written: $(date)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  # Finish the timer and output the result
+  TIMER2=$(($(date +%s%N)/1000000))
+  echo "file writing took $(($TIMER2-$TIMER1)) milliseconds" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
 ### End of output modules ###
