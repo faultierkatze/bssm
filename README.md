@@ -15,3 +15,9 @@ It is tested on Debian 10 - on systems with a different package base it can't be
 
 Requirements: neofetch, ip (iproute2), various standard tools virtually any system should have. There is no built-in requirements check for performance reasons.
 
+### To install:
+  * clone the repository
+  * make `bssm` and `bssm_config` executable
+  * optionally: edit the options in `bssm_config` to your liking
+  * for regular execution using cron, run `crontab -e` and add a line similar to this one which executes the script every 5 minutes and discards any output from stdout and stderr so cron won't annoy you with mail (disable for debugging obviously):  
+`*/5 * * * * cd /home/user/bssm && ./bssm > /dev/null 2>&1`
