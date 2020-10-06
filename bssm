@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Bash Simple Server Monitor
-# Version: 2020-09-29
+# Version: 2020-10-06
 # Intended to be used with a cronjob. For more details see README.md.
 
 # Set the timer
@@ -42,7 +42,7 @@ fi
 if [[ $MOD_SYSINFO = 1 ]]; then
   echo -e "$(neofetch cpu kernel distro --cpu_temp C)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
   echo -e "$(uptime -p)\nup since: $(uptime -s)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
-  echo -e "$(uptime | cut -d " " -f 12-)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "load average (1/5/15min):$(uptime | awk -F'average:' '{print $2}')" >> $OUTPUT_DIR/$OUTPUT_FILENAME
   echo -e "users logged in: $(who -q | head -1)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
