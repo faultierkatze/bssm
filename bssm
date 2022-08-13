@@ -33,7 +33,7 @@ fi
 
 ### Begin of the actual output modules ###
 
-# HTML output
+# HTML output, header
 if [[ $MOD_HTML = 1 ]]; then
   echo -e "<html>\n<head>\n<title>Statistics for $(hostname)</title>\n<style type="text/css">body {color:$MOD_HTML_COLOR; background-color:$MOD_HTML_BACKGROUND;}</style>\n</head>\n<body>\n<pre>\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
@@ -47,20 +47,25 @@ fi
 #   This uses neofetch, which itself is a bash script, so if one wanted the relevant parts could be copied in here
 #   The way the load is displayed is kinda hacky
 if [[ $MOD_SYSINFO = 1 ]]; then
-  echo -e "$(neofetch cpu kernel distro --cpu_temp C)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "$(neofetch kernel distro --cpu_temp C)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
   echo -e "$(uptime -p)\nup since: $(uptime -s)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
   echo -e "load average (1/5/15min):$(uptime | awk -F'average:' '{print $2}')" >> $OUTPUT_DIR/$OUTPUT_FILENAME
   echo -e "users logged in: $(who -q | head -1)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
+# CPU
+if [[ $MOD_CPU = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR     CPU     $FIELD_SEPARATOR\n$(lscpu | grep CPU | head -8)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
 # Sensors
 if [[ $MOD_SENSORS = 1 ]]; then
-  echo -e "$FIELD_SEPARATOR Sensors $FIELD_SEPARATOR\n$(sensors)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "$FIELD_SEPARATOR   Sensors   $FIELD_SEPARATOR\n$(sensors)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
 # File systems
 if [[ $MOD_FILESYSTEMS = 1 ]]; then
-  echo -e "$FIELD_SEPARATOR Filesystems $FIELD_SEPARATOR\n$(df -h -T -x devtmpfs -x tmpfs --total)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+  echo -e "$FIELD_SEPARATOR Filesystems $FIELD_SEPARATOR\n$(df -h -T -x devtmpfs -x tmpfs --total 2> /dev/null)\n" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
 # RAM
@@ -89,6 +94,15 @@ if [[ $MOD_NETWORK = 1 ]]; then
   echo >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
+# Network, second interface since servers often have more than one
+if [[ $MOD_NETWORK2 = 1 ]]; then
+  echo -e "$FIELD_SEPARATOR   Network   $FIELD_SEPARATOR\n$(ip -h -s a show $MOD_NETWORK_DEVICE2)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
+    if [[ $? = 1 ]]; then
+      echo "Set the correct network device in bssm_config." >> $OUTPUT_DIR/$OUTPUT_FILENAME
+    fi
+  echo >> $OUTPUT_DIR/$OUTPUT_FILENAME
+fi
+
 # Footer
 if [[ $MOD_FOOTER = 1 ]]; then
   echo -e "\nfile written: $(date)" >> $OUTPUT_DIR/$OUTPUT_FILENAME
@@ -97,7 +111,7 @@ if [[ $MOD_FOOTER = 1 ]]; then
   echo "file writing took $(($TIMER2-$TIMER1)) milliseconds" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
 
-# HTML output
+# HTML output, footer
 if [[ $MOD_HTML = 1 ]]; then
   echo -e "\n</pre></body></html>" >> $OUTPUT_DIR/$OUTPUT_FILENAME
 fi
@@ -110,3 +124,5 @@ if [[ $ARCHIVE = 1 ]]; then
   ARCHIVE_FILENAME="${OUTPUT_FILENAME}_$(date +%Y%m%d_%H%M%S)"
   cp $OUTPUT_DIR/$OUTPUT_FILENAME $OUTPUT_DIR/$ARCHIVE_FILENAME
 fi
+
+# ~The End~
