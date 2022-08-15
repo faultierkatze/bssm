@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Bash Simple Server Monitor
-# Version: 2021-02-02
+# Version: 2022-08-13
 # Intended to be used with a cronjob. For more details see README.md.
 
 # Importing the config file
